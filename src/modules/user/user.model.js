@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs';
  * @typedef {Object} UserFields
  * @property {mongoose.Schema.Types.ObjectId} id
  * @property {string} username
- * @property {string=} fullName
+ * @property {string} fullName
  * @property {string} email
  * @property {boolean=} emailVerified
  * @property {string} password

@@ -22,7 +22,7 @@ const signup = asyncHandler(async (req, res, _next) => {
   await signupOTP(user.id, otp, 'signup');
   await sendVerificationEmail(user.email, otp, user.username);
   ApiResponse.CREATED(
-    user,
+    { user },
     'Signed up successfully. Please check your email for the OTP to verify your account.'
   ).send(res);
 
@@ -41,15 +41,7 @@ const verifyEmail = asyncHandler(async (req, res, _next) => {
 
   const token = generateAuthToken(id);
 
-  // Attach token to an HTTP-only cookie
-  res.cookie('jwt', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
-    sameSite: 'none',
-    maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day in milliseconds
-  });
-
-  ApiResponse.OK(null, 'Email verified successfully.').send(res);
+  ApiResponse.OK({ token }, 'Email verified successfully.').send(res);
   return;
 });
 
@@ -58,20 +50,12 @@ const login = asyncHandler(async (req, res, _next) => {
   const user = await checkLoginCredentials(email, password);
   const token = generateAuthToken(user.id);
 
-  // Attach token to an HTTP-only cookie
-  res.cookie('jwt', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
-    sameSite: 'none',
-    maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day in milliseconds
-  });
-
-  ApiResponse.OK(user, 'Login successful').send(res);
+  ApiResponse.OK({ user, token }, 'Login successful').send(res);
   return;
 });
 
 const logout = asyncHandler(async (req, res, _next) => {
-  res.clearCookie('jwt', {
+  res.clearCookie('token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'none',
@@ -82,12 +66,14 @@ const logout = asyncHandler(async (req, res, _next) => {
 });
 
 const me = asyncHandler(async (req, res, _next) => {
-  const jwt = req?.cookies?.jwt;
-  const { id } = verifyJWT(jwt);
+  const authHeader = req?.headers?.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+
+  const { id } = verifyJWT(token);
 
   const user = await getUserProfile(id);
 
-  ApiResponse.OK(user, 'User profile retrieved successfully').send(res);
+  ApiResponse.OK({ user }, 'User profile retrieved successfully').send(res);
   return;
 });
 
