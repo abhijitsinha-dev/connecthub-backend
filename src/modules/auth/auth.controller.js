@@ -62,7 +62,7 @@ const login = asyncHandler(async (req, res, _next) => {
   res.cookie('jwt', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
-    sameSite: 'strict',
+    sameSite: 'none',
     maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day in milliseconds
   });
 
@@ -74,7 +74,7 @@ const logout = asyncHandler(async (req, res, _next) => {
   res.clearCookie('jwt', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'none',
   });
 
   ApiResponse.OK(null, 'Logged out successfully').send(res);

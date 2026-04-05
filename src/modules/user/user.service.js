@@ -71,7 +71,9 @@ const verifyUserEmail = async userId => {
  * @throws {import('../utils/ApiError.js').ApiError}
  */
 const checkLoginCredentials = async (email, password) => {
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email, emailVerified: true }).select(
+    '+password'
+  );
   if (!user) {
     throw new ApiError(401, 'Incorrect email or password', [
       {
