@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 4000;
 
   /**@type {import('http').Server} */
   const server = app.listen(PORT, () => {
-    console.log(`\nServer is running on render at PORT: ${PORT}/`);
+    console.log(`\nServer is running on render at PORT: ${PORT}`);
   });
 
   /**@param {Error} error */

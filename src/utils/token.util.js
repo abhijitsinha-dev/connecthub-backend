@@ -21,7 +21,9 @@ const generateAuthToken = id => {
 const verifyJWT = token => {
   try {
     return jwt.verify(token, process.env.JWT_SECRET);
-  } catch (_err) {
+  } catch (err) {
+    console.log('JWT verification failed:', err);
+
     throw ApiError.UNAUTHORIZED('Invalid or expired token');
   }
 };

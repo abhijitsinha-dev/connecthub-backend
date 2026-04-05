@@ -45,7 +45,7 @@ const verifyEmail = asyncHandler(async (req, res, _next) => {
   res.cookie('jwt', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
-    sameSite: 'strict',
+    sameSite: 'none',
     maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day in milliseconds
   });
 
