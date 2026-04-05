@@ -25,9 +25,11 @@ const sendEmail = async (to, subject, html, text) => {
       const info = await transporter.sendMail(mailOptions);
       console.log('📧Email sent: ', info.messageId);
       return info;
-    } catch (_error) {
+    } catch (error) {
       // if (attempt === maxAttempts) throw error; // last attempt failed
       console.log(`Attempt ${attempt} failed, retrying in 2s...`);
+      console.log(error);
+
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }
