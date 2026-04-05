@@ -1,22 +1,9 @@
-import nodemailer from 'nodemailer';
+import { BrevoClient } from '@getbrevo/brevo';
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: false, // true for 465, false for other ports like 587
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
+// Initialize the client with your API key
+const brevo = new BrevoClient({
+  apiKey: process.env.BREVO_API_KEY,
 });
 
-// for development with MailHog or similar local SMTP server
-// const transporter = nodemailer.createTransport({
-//   host: process.env.MAIL_HOST,
-//   port: Number(process.env.MAIL_PORT),
-//   secure: false,
-//   ignoreTLS: true,
-//   auth: null,
-// });
-
-export default transporter;
+// Export the client so your service can use it
+export default brevo;
