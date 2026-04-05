@@ -1,0 +1,18 @@
+ConnetHub
+
+Hello {{USERNAME}},
+
+Welcome to ConnetHub. To complete your registration, please verify your email address using the confirmation code below:
+
+{{OTP_CODE}}
+
+This code is valid for 5 minutes.
+
+This email was sent to {{USER_EMAIL}}. If you didn't create an account with ConnetHub, you can safely ignore this email.
+
+Best Regards,
+The ConnetHub Team
+
+--------------------------------------------------
+This is an automated message. Please do not reply to this email.
+© {{CURRENT_YEAR}} ConnetHub.

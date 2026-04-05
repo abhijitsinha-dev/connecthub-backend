@@ -1,0 +1,69 @@
+# Auto-detect text files and perform LF normalization
+* text=auto
+
+# Source code files
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+
+# Binary files (should not be modified)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mov binary
+*.mp4 binary
+*.mp3 binary
+*.flv binary
+*.fla binary
+*.swf binary
+*.gz binary
+*.zip binary
+*.7z binary
+*.ttf binary
+*.eot binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+*.doc binary
+*.docx binary
+*.xls binary
+*.xlsx binary
+*.ppt binary
+*.pptx binary
+
+# Specific files
+package-lock.json binary
+yarn.lock binary
+
+# Git files
+.gitattributes text eol=lf
+.gitignore text eol=lf
+.editorconfig text eol=lf
+
+# Ensure these files are handled correctly
+.editorconfig export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
+
+# GitHub linguist settings (for language detection on GitHub)
+# This helps GitHub recognize this as a Node.js project
+*.js linguist-language=JavaScript
+*.jsx linguist-language=JavaScript
+*.ts linguist-language=TypeScript
+*.tsx linguist-language=TypeScript
+*.json linguist-language=JSON
+
+# Diff settings for specific files
+package.json diff=npm
+package-lock.json diff=npm

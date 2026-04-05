@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/jsconfig",
+  "compilerOptions": {
+    "module": "node16",
+    "target": "esnext",
+    "moduleResolution": "node16",
+    "checkJs": true,
+    "allowJs": true,
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["index.js", "src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "dist", "build", "coverage"]
+}
