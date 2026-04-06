@@ -20,7 +20,7 @@ const generateOTP = (length = 6) => {
  * @param {string} otp
  * @param {'signup' | 'password-reset' | 'email-change'} type
  */
-const signupOTP = async (userId, otp, type) => {
+const createOTP = async (userId, otp, type) => {
   await OTP.deleteMany({ userId });
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // OTP valid for 5 minutes
   await OTP.create({ userId, otp, type, expiresAt });
@@ -33,7 +33,7 @@ const signupOTP = async (userId, otp, type) => {
  * @param {'signup' | 'password-reset' | 'email-change'} type
  * @throws {import('../utils/ApiError.js').ApiError} Throws an error if the OTP is invalid or has expired.
  */
-const verifyEmailOTP = async (userId, otp, type) => {
+const verifyOTP = async (userId, otp, type) => {
   const otpDoc = await OTP.findOne({ userId, otp, type });
   if (!otpDoc) {
     throw new ApiError(400, 'Invalid OTP', [
@@ -57,4 +57,4 @@ const verifyEmailOTP = async (userId, otp, type) => {
   await OTP.deleteMany({ userId });
 };
 
-export { generateOTP, signupOTP, verifyEmailOTP };
+export { generateOTP, createOTP, verifyOTP };

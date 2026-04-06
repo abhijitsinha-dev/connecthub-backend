@@ -74,4 +74,37 @@ const sendVerificationEmail = async (email, otp, username) => {
   return sendEmail(email, subject, html, text);
 };
 
-export { sendVerificationEmail };
+/**
+ * @description Send a password reset email with OTP
+ * @param {string} email
+ * @param {string} otp
+ * @param {string} username
+ * @returns {Promise} - Brevo response
+ */
+const sendPasswordResetEmail = async (email, otp, username) => {
+  const subject = 'Reset your password';
+
+  let text = fs.readFileSync(
+    path.join(import.meta.dirname, './templates/forgotPassword.txt'),
+    'utf-8'
+  );
+  text = text
+    .replace(/{{USERNAME}}/g, username)
+    .replace(/{{OTP_CODE}}/g, otp)
+    .replace(/{{USER_EMAIL}}/g, email)
+    .replace(/{{CURRENT_YEAR}}/g, new Date().getFullYear().toString());
+
+  let html = fs.readFileSync(
+    path.join(import.meta.dirname, './templates/forgotPassword.html'),
+    'utf-8'
+  );
+  html = html
+    .replace(/{{USERNAME}}/g, username)
+    .replace(/{{OTP_CODE}}/g, otp)
+    .replace(/{{USER_EMAIL}}/g, email)
+    .replace(/{{CURRENT_YEAR}}/g, new Date().getFullYear().toString());
+
+  return sendEmail(email, subject, html, text);
+};
+
+export { sendVerificationEmail, sendPasswordResetEmail };

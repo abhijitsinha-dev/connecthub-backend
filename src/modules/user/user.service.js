@@ -104,7 +104,7 @@ const checkLoginCredentials = async (email, password) => {
  * @returns {Promise<import('./user.model.js').UserFields>}
  * @throws {import('../utils/ApiError.js').ApiError}
  */
-const getUserProfile = async userId => {
+const getUserById = async userId => {
   const user = await User.findById(userId);
   if (!user) {
     throw ApiError.NOT_FOUND('userId');
@@ -112,4 +112,34 @@ const getUserProfile = async userId => {
   return user.toJSON();
 };
 
-export { createUser, verifyUserEmail, checkLoginCredentials, getUserProfile };
+const getUserByEmail = async email => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw ApiError.NOT_FOUND('email');
+  }
+  return user.toJSON();
+};
+
+/**
+ * @description Resets the user's password to a new value. This is typically called after successful password reset token verification. It checks if the user exists, updates the password, and saves the user document. If the user is not found, it throws a 404 Not Found error.
+ * @param {import('mongoose').Schema.Types.ObjectId} userId
+ * @param {string} newPassword
+ * @throws {import('../utils/ApiError.js').ApiError}
+ */
+const resetUserPassword = async (userId, newPassword) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw ApiError.NOT_FOUND('userId');
+  }
+  user.password = newPassword;
+  await user.save();
+};
+
+export {
+  createUser,
+  verifyUserEmail,
+  checkLoginCredentials,
+  resetUserPassword,
+  getUserById,
+  getUserByEmail,
+};
