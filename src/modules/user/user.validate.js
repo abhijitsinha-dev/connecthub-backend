@@ -9,7 +9,6 @@ const updateLoggedInUserSchema = customJoi
       .min(5)
       .max(50)
       .regex(/^[a-z0-9_-]+$/)
-      .required()
       .messages({
         'string.pattern.base':
           'username must contain only lowercase letters, numbers, underscores, and hyphens',
