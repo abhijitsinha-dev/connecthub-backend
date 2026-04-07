@@ -19,16 +19,11 @@ const updateLoggedInUserSchema = customJoi
       .trim()
       .min(5)
       .max(100)
-      .custom((value, helpers) => {
-        if (!validator.isAlpha(value)) {
-          return helpers.error('invalidFullName');
-        }
-        return value;
-      })
+      .regex(/^[a-zA-Z\s]+$/)
       .messages({
         'string.min': 'Full name must be at least 5 characters',
         'string.max': 'Full name must be at most 100 characters',
-        invalidFullName: 'Full name must contain only letters',
+        'string.pattern.base': 'Full name must contain only letters and spaces',
       }),
 
     phoneNumber: customJoi
