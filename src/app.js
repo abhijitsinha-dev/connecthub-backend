@@ -13,7 +13,12 @@ app.use(/** @type {import('express').RequestHandler} */ (cookieParser()));
 
 // Import and use the auth router
 import authRouter from './modules/auth/auth.route.js';
+import mediaRouter from './modules/media/media.route.js';
+import userRouter from './modules/user/user.route.js';
+
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/media', mediaRouter);
+app.use('/api/v1/users', userRouter);
 
 app.get('/', (req, res) => {
   res.send('Hello, World!');

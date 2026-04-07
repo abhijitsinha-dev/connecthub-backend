@@ -9,12 +9,14 @@ import bcrypt from 'bcryptjs';
  * @property {string} username
  * @property {string} fullName
  * @property {string} email
- * @property {boolean=} emailVerified
+ * @property {boolean} emailVerified
  * @property {string} password
  * @property {string=} phoneNumber
  * @property {boolean=} phoneNumberVerified
- * @property {Date=} createdAt
- * @property {Date=} updatedAt
+ * @property {Object=} avatar
+ * @property {Object=} coverImage
+ * @property {Date} createdAt
+ * @property {Date} updatedAt
  */
 
 /**
@@ -99,6 +101,28 @@ const userSchema = new mongoose.Schema(
     phoneNumberVerified: {
       type: Boolean,
       default: false,
+    },
+
+    avatar: {
+      url: {
+        type: String,
+        default: '',
+      },
+      publicId: {
+        type: String,
+        default: '',
+      },
+    },
+
+    coverImage: {
+      url: {
+        type: String,
+        default: '',
+      },
+      publicId: {
+        type: String,
+        default: '',
+      },
     },
   },
   {

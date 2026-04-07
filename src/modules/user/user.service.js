@@ -1,4 +1,5 @@
 import ApiError from '../../utils/ApiError.js';
+import { deleteMedia } from '../media/media.service.js';
 import User from './user.model.js';
 
 /**
@@ -135,6 +136,29 @@ const resetUserPassword = async (userId, newPassword) => {
   await user.save();
 };
 
+/**
+ * @description Updates the user's profile information based on the provided user ID and update data. It checks if the user exists, applies the updates, and saves the user document. If the user is not found, it throws a 404 Not Found error.
+ * @param {import('mongoose').Schema.Types.ObjectId} userId
+ * @param {Object} updateData - An object containing the fields to be updated (e.g., username, fullName, phoneNumber, avatar, coverImage)
+ * @returns {Promise<import('./user.model.js').UserFields>}
+ * @throws {import('../utils/ApiError.js').ApiError}
+ */
+const updateUserById = async (userId, updateData) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw ApiError.NOT_FOUND('userId');
+  }
+
+  const { avatar, coverImage } = updateData;
+
+  if (avatar || avatar === null) deleteMedia(user.avatar.publicId, 'image');
+  if (coverImage || coverImage === null)
+    deleteMedia(user.coverImage.publicId, 'image');
+
+  Object.assign(user, updateData);
+  return (await user.save()).toJSON();
+};
+
 export {
   createUser,
   verifyUserEmail,
@@ -142,4 +166,5 @@ export {
   resetUserPassword,
   getUserById,
   getUserByEmail,
+  updateUserById,
 };
