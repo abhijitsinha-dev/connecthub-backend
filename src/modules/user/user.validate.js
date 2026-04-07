@@ -3,15 +3,34 @@ import { customJoi } from '../../config/joi.js';
 
 const updateLoggedInUserSchema = customJoi
   .object({
-    username: customJoi.string().trim().min(3).max(30).messages({
-      'string.min': 'Username must be at least 3 characters',
-      'string.max': 'Username must be at most 30 characters',
-    }),
+    username: customJoi
+      .string()
+      .trim()
+      .min(5)
+      .max(50)
+      .regex(/^[a-z0-9_-]+$/)
+      .required()
+      .messages({
+        'string.pattern.base':
+          'username must contain only lowercase letters, numbers, underscores, and hyphens',
+      }),
 
-    fullName: customJoi.string().trim().min(3).max(100).messages({
-      'string.min': 'Full name must be at least 3 characters',
-      'string.max': 'Full name must be at most 100 characters',
-    }),
+    fullName: customJoi
+      .string()
+      .trim()
+      .min(5)
+      .max(100)
+      .custom((value, helpers) => {
+        if (!validator.isAlpha(value)) {
+          return helpers.error('invalidFullName');
+        }
+        return value;
+      })
+      .messages({
+        'string.min': 'Full name must be at least 5 characters',
+        'string.max': 'Full name must be at most 100 characters',
+        invalidFullName: 'Full name must contain only letters',
+      }),
 
     phoneNumber: customJoi
       .string()
@@ -25,7 +44,7 @@ const updateLoggedInUserSchema = customJoi
       .messages({
         invalidPhoneNumber: 'Invalid phone number',
       })
-      .allow(null),
+      .allow(''),
 
     avatar: customJoi
       .object({
@@ -44,6 +63,26 @@ const updateLoggedInUserSchema = customJoi
         publicId: customJoi.string(),
       })
       .allow(null),
+
+    gender: customJoi
+      .string()
+      .valid('male', 'female', 'other', 'prefer not to say')
+      .messages({
+        'any.only':
+          'Gender must be one of the following: male, female, other, prefer not to say',
+      }),
+
+    bio: customJoi.string().trim().max(200).allow(''),
+
+    dateOfBirth: customJoi
+      .date()
+      .less('now')
+      .messages({
+        'date.less': 'Date of birth must be in the past',
+      })
+      .allow(null),
+
+    address: customJoi.string().trim().max(200).allow(''),
   })
   .min(1)
   .messages({

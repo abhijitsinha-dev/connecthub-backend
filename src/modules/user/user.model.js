@@ -15,6 +15,10 @@ import bcrypt from 'bcryptjs';
  * @property {boolean=} phoneNumberVerified
  * @property {Object=} avatar
  * @property {Object=} coverImage
+ * @property {string=} gender
+ * @property {string=} bio
+ * @property {Date=} dateOfBirth
+ * @property {string=} address
  * @property {Date} createdAt
  * @property {Date} updatedAt
  */
@@ -91,11 +95,6 @@ const userSchema = new mongoose.Schema(
     phoneNumber: {
       type: String,
       trim: true,
-      validate: {
-        validator: validator.isMobilePhone,
-        message: 'phone number must be a valid phone number',
-        type: 'phoneNumber',
-      },
     },
 
     phoneNumberVerified: {
@@ -123,6 +122,34 @@ const userSchema = new mongoose.Schema(
         type: String,
         default: '',
       },
+    },
+
+    gender: {
+      type: String,
+      enum: ['male', 'female', 'other', 'prefer not to say'],
+    },
+
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: [
+        200,
+        'bio length must be less than or equal to 200 characters long',
+      ],
+    },
+
+    dateOfBirth: {
+      type: Date,
+      default: null,
+    },
+
+    address: {
+      type: String,
+      trim: true,
+      maxlength: [
+        200,
+        'address length must be less than or equal to 200 characters long',
+      ],
     },
   },
   {
