@@ -35,5 +35,14 @@ const PORT = process.env.PORT || 4000;
 
   process.on('SIGINT', gracefulShutdown);
   process.on('SIGTERM', gracefulShutdown);
-  process.on('uncaughtException', gracefulShutdown);
+
+  process.on('uncaughtException', error => {
+    console.error('UNCAUGHT EXCEPTION! Shutting down...', error);
+    process.exit(1);
+  });
+
+  process.on('unhandledRejection', (reason, _promise) => {
+    console.error('UNHANDLED REJECTION! Shutting down...', reason);
+    process.exit(1);
+  });
 })();

@@ -151,12 +151,37 @@ const updateUserById = async (userId, updateData) => {
 
   const { avatar, coverImage } = updateData;
 
-  if (avatar || avatar === null) deleteMedia(user.avatar.publicId, 'image');
+  if (avatar || avatar === null)
+    await deleteMedia(user.avatar.publicId, 'image');
   if (coverImage || coverImage === null)
-    deleteMedia(user.coverImage.publicId, 'image');
+    await deleteMedia(user.coverImage.publicId, 'image');
 
   Object.assign(user, updateData);
   return (await user.save()).toJSON();
+};
+
+const searchUsersAtlas = async searchTerm => {
+  if (!searchTerm) return [];
+
+  const pipeline = [
+    {
+      $search: {
+        index: 'default', // Replace with your index name if different
+        text: {
+          query: searchTerm,
+          path: 'username',
+          fuzzy: {
+            maxEdits: 2,
+          },
+        },
+      },
+    },
+  ];
+
+  const users = await User.aggregate(pipeline);
+  console.log(users);
+
+  return users;
 };
 
 export {
@@ -167,4 +192,5 @@ export {
   getUserById,
   getUserByEmail,
   updateUserById,
+  searchUsersAtlas,
 };
