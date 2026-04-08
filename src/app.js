@@ -25,6 +25,8 @@ app.get('/', (req, res) => {
 });
 
 import errorHandler from './middlewares/errorHandler.js';
+import healthCheck from './controllers/healthcheck.controller.js';
+app.get('/api/v1/health', healthCheck);
 app.use(errorHandler);
 
 export default app;
