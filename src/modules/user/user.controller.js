@@ -1,6 +1,10 @@
 import ApiResponse from '../../utils/ApiResponse.js';
 import asyncHandler from '../../utils/asyncHandler.js';
-import { searchUsersAtlas, updateUserById } from './user.service.js';
+import {
+  findUserByUsername,
+  searchUsersAtlas,
+  updateUserById,
+} from './user.service.js';
 
 /**
  * @description Updates the user's profile information based on the provided user ID and update data. It checks if the user exists, applies the updates, and saves the user document. If the user is not found, it throws a 404 Not Found error.
@@ -22,4 +26,12 @@ const searchUsers = asyncHandler(async (req, res, _next) => {
   ApiResponse.OK({ users }, 'Users retrieved successfully').send(res);
 });
 
-export { updateLoggedInUser, searchUsers };
+const getUserByUsername = asyncHandler(async (req, res, _next) => {
+  const { username } = req.params;
+
+  const user = await findUserByUsername(username);
+
+  ApiResponse.OK({ user }, 'User retrieved successfully').send(res);
+});
+
+export { updateLoggedInUser, searchUsers, getUserByUsername };

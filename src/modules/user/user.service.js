@@ -184,6 +184,14 @@ const searchUsersAtlas = async searchTerm => {
   return users;
 };
 
+const findUserByUsername = async username => {
+  const user = await User.findOne({ username });
+  if (!user) {
+    throw ApiError.NOT_FOUND('username');
+  }
+  return user.toJSON();
+};
+
 export {
   createUser,
   verifyUserEmail,
@@ -193,4 +201,5 @@ export {
   getUserByEmail,
   updateUserById,
   searchUsersAtlas,
+  findUserByUsername,
 };

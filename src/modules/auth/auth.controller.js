@@ -97,7 +97,7 @@ const me = asyncHandler(async (req, res, _next) => {
 
   const user = await getUserById(id);
 
-  ApiResponse.OK({ user }, 'User profile retrieved successfully').send(res);
+  ApiResponse.OK({ user }, 'User retrieved successfully').send(res);
   return;
 });
 
