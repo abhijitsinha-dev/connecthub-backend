@@ -26,6 +26,11 @@ const searchUsers = asyncHandler(async (req, res, _next) => {
   ApiResponse.OK({ users }, 'Users retrieved successfully').send(res);
 });
 
+/**
+ * @description Retrieves a user's profile information based on their username. It checks if the user exists and returns the user data. If the user is not found, it throws a 404 Not Found error.
+ * @type {import('express').RequestHandler}
+ * @returns {import('express').Response}
+ */
 const getUserByUsername = asyncHandler(async (req, res, _next) => {
   const { username } = req.params;
 

@@ -131,17 +131,7 @@ const forgotPasswordVerifyOTPSchema = customJoi.object({
       mongoId: 'Invalid userId',
     }),
 
-  email: customJoi
-    .string()
-    .email()
-    .trim()
-    .max(255)
-    .required()
-    .lowercase()
-    .messages({
-      'string.email': 'Invalid email or OTP',
-      'string.max': 'Invalid email or OTP',
-    }),
+  email: customJoi.string().email().trim().max(255).required().lowercase(),
 
   otp: customJoi.string().length(6).required().messages({
     'string.length': 'Invalid email or OTP',
@@ -189,6 +179,55 @@ const resetPasswordSchema = customJoi.object({
     .messages({ 'any.only': 'Passwords do not match' }),
 });
 
+const emailChangeRequestSchema = customJoi.object({
+  newEmail: customJoi.string().email().trim().max(255).required().lowercase(),
+});
+
+const emailChangeVerifyOTPSchema = customJoi.object({
+  otp: customJoi.string().length(6).required(),
+
+  newEmail: customJoi.string().email().trim().max(255).required().lowercase(),
+});
+
+const changePasswordSchema = customJoi.object({
+  oldPassword: customJoi
+    .string()
+    .required()
+    .trim()
+    .max(128)
+    .custom((value, helpers) => {
+      if (!validator.isStrongPassword(value)) {
+        return helpers.error('incorrect');
+      }
+
+      return value;
+    })
+    .messages({ incorrect: 'Incorrect old password' }),
+
+  newPassword: customJoi
+    .string()
+    .required()
+    .trim()
+    .min(8)
+    .max(128)
+    .custom((value, helpers) => {
+      if (!validator.isStrongPassword(value)) {
+        return helpers.error('strongPassword');
+      }
+
+      return value;
+    })
+    .messages({
+      strongPassword:
+        'New password must be at least 8 characters long and include uppercase letters, lowercase letters, numbers, and symbols',
+    }),
+
+  confirmNewPassword: customJoi
+    .required()
+    .valid(customJoi.ref('newPassword'))
+    .messages({ 'any.only': 'Passwords do not match' }),
+});
+
 export {
   signupSchema,
   verifyEmailSchema,
@@ -196,4 +235,7 @@ export {
   forgotPasswordSchema,
   forgotPasswordVerifyOTPSchema,
   resetPasswordSchema,
+  emailChangeRequestSchema,
+  emailChangeVerifyOTPSchema,
+  changePasswordSchema,
 };

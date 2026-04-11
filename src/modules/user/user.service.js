@@ -184,12 +184,46 @@ const searchUsersAtlas = async searchTerm => {
   return users;
 };
 
+/**
+ * @description Retrieves a user's profile information based on their username. It checks if the user exists and returns the user data. If the user is not found, it throws a 404 Not Found error.
+ * @param {string} username
+ * @returns {Promise<import('./user.model.js').UserFields>}
+ * @throws {import('../utils/ApiError.js').ApiError}
+ */
 const findUserByUsername = async username => {
   const user = await User.findOne({ username });
   if (!user) {
     throw ApiError.NOT_FOUND('username');
   }
   return user.toJSON();
+};
+
+/**
+ * @description Changes the user's password after verifying the current password. It checks if the user exists, verifies the current password, and updates to the new password. If the user is not found, it throws a 404 Not Found error. If the current password is incorrect, it throws a 401 Unauthorized error.
+ * @param {import('mongoose').Schema.Types.ObjectId} userId
+ * @param {string} oldPassword
+ * @param {string} newPassword
+ * @throws {import('../utils/ApiError.js').ApiError}
+ */
+const changeUserPassword = async (userId, oldPassword, newPassword) => {
+  const user = await User.findById(userId).select('+password');
+  if (!user) {
+    throw ApiError.NOT_FOUND('userId');
+  }
+
+  const isMatch = await user.isPasswordCorrect(oldPassword);
+  if (!isMatch) {
+    throw new ApiError(401, 'Old password is incorrect', [
+      {
+        field: 'oldPassword',
+        constraint: 'incorrect',
+        message: 'Old password is incorrect',
+      },
+    ]);
+  }
+
+  user.password = newPassword;
+  return (await user.save()).toJSON();
 };
 
 export {
@@ -202,4 +236,5 @@ export {
   updateUserById,
   searchUsersAtlas,
   findUserByUsername,
+  changeUserPassword,
 };

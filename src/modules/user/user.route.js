@@ -13,8 +13,8 @@ const router = Router();
 router
   .route('/profile')
   .patch(validate(updateLoggedInUserSchema), protect, updateLoggedInUser);
-router.route('/:username').get(protect, getUserByUsername);
-
 router.route('/search').get(searchUsers);
+
+router.route('/:username').get(protect, getUserByUsername);
 
 export default router;

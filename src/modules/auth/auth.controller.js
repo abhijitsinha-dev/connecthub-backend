@@ -1,3 +1,4 @@
+import ApiError from '../../utils/ApiError.js';
 import ApiResponse from '../../utils/ApiResponse.js';
 import asyncHandler from '../../utils/asyncHandler.js';
 import {
@@ -6,16 +7,19 @@ import {
   verifyJWT,
 } from '../../utils/token.util.js';
 import {
+  sendChangeEmail,
   sendPasswordResetEmail,
   sendVerificationEmail,
 } from '../email/email.service.js';
 import { createOTP, generateOTP, verifyOTP } from '../otp/otp.service.js';
 import {
+  changeUserPassword,
   checkLoginCredentials,
   createUser,
   getUserByEmail,
   getUserById,
   resetUserPassword,
+  updateUserById,
   verifyUserEmail,
 } from '../user/user.service.js';
 
@@ -149,6 +153,74 @@ const resetPassword = asyncHandler(async (req, res, _next) => {
   return;
 });
 
+/**
+ * @description Handles the email change request by generating an OTP and sending it to the new email address for verification. The user must verify the OTP to confirm the email change.
+ * @type {import('express').RequestHandler}
+ * @returns {import('express').Response}
+ */
+const emailChangeRequest = asyncHandler(async (req, res, _next) => {
+  const { id } = req.decodedToken;
+  const user = await getUserById(id);
+  const { newEmail } = req.body;
+
+  if (user.email === newEmail) {
+    throw new ApiError(
+      400,
+      'New email cannot be the same as the current email',
+      [
+        {
+          field: 'newEmail',
+          constraint: 'same_as_current',
+          message: 'New email cannot be the same as the current email',
+        },
+      ]
+    );
+  }
+
+  const otp = generateOTP();
+  await createOTP(id, otp, 'email-change');
+  await sendChangeEmail(newEmail, otp, user.username);
+
+  ApiResponse.OK(
+    null,
+    'Email change request received. Please check your new email for the OTP to confirm the change.'
+  ).send(res);
+  return;
+});
+
+/**
+ * @description Verifies the OTP provided by the user for email change. If the OTP is valid, it updates the user's email address in the database.
+ * @type {import('express').RequestHandler}
+ * @returns {import('express').Response}
+ */
+const emailChangeVerifyOTP = asyncHandler(async (req, res, _next) => {
+  const { id } = req.decodedToken;
+  const { otp, newEmail } = req.body;
+  await verifyOTP(id, otp, 'email-change');
+  await updateUserById(id, { email: newEmail });
+
+  ApiResponse.OK(
+    null,
+    'OTP verified successfully. Your email will be changed once confirmed.'
+  ).send(res);
+  return;
+});
+
+/**
+ * @description Changes the user's password after verifying the current password. It checks if the user exists, verifies the current password, and updates to the new password. If the user is not found, it throws a 404 Not Found error. If the current password is incorrect, it throws a 401 Unauthorized error.
+ * @type {import('express').RequestHandler}
+ * @returns {import('express').Response}
+ */
+const changePassword = asyncHandler(async (req, res, _next) => {
+  const { id } = req.decodedToken;
+  const { oldPassword, newPassword } = req.body;
+
+  const user = await changeUserPassword(id, oldPassword, newPassword);
+
+  ApiResponse.OK({ user }, 'Password changed successfully.').send(res);
+  return;
+});
+
 export {
   signup,
   signupVerifyEmail,
@@ -158,4 +230,7 @@ export {
   forgotPassword,
   forgotPasswordVerifyOTP,
   resetPassword,
+  emailChangeRequest,
+  emailChangeVerifyOTP,
+  changePassword,
 };

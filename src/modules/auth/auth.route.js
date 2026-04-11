@@ -1,5 +1,8 @@
 import { Router } from 'express';
 import {
+  changePassword,
+  emailChangeRequest,
+  emailChangeVerifyOTP,
   forgotPassword,
   forgotPasswordVerifyOTP,
   login,
@@ -17,7 +20,11 @@ import {
   forgotPasswordSchema,
   forgotPasswordVerifyOTPSchema,
   resetPasswordSchema,
+  emailChangeRequestSchema,
+  emailChangeVerifyOTPSchema,
+  changePasswordSchema,
 } from './auth.validate.js';
+import protect from '../../middlewares/protect.js';
 
 const router = Router();
 
@@ -31,11 +38,25 @@ router.route('/me').get(me);
 router
   .route('/forgot-password')
   .post(validate(forgotPasswordSchema), forgotPassword);
+
 router
   .route('/forgot-password/verify-otp')
   .post(validate(forgotPasswordVerifyOTPSchema), forgotPasswordVerifyOTP);
+
 router
   .route('/reset-password')
   .post(validate(resetPasswordSchema), resetPassword);
+
+router
+  .route('/email')
+  .patch(protect, validate(emailChangeRequestSchema), emailChangeRequest);
+
+router
+  .route('/email/verify-otp')
+  .patch(protect, validate(emailChangeVerifyOTPSchema), emailChangeVerifyOTP);
+
+router
+  .route('/password')
+  .patch(protect, validate(changePasswordSchema), changePassword);
 
 export default router;

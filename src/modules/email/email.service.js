@@ -107,4 +107,37 @@ const sendPasswordResetEmail = async (email, otp, username) => {
   return sendEmail(email, subject, html, text);
 };
 
-export { sendVerificationEmail, sendPasswordResetEmail };
+/**
+ * @description Send an email change confirmation email with OTP
+ * @param {string} email
+ * @param {string} otp
+ * @param {string} username
+ * @returns {Promise} - Brevo response
+ */
+const sendChangeEmail = async (email, otp, username) => {
+  const subject = 'Confirm your email change';
+
+  let text = fs.readFileSync(
+    path.join(import.meta.dirname, './templates/emailChange.txt'),
+    'utf-8'
+  );
+  text = text
+    .replace(/{{USERNAME}}/g, username)
+    .replace(/{{OTP_CODE}}/g, otp)
+    .replace(/{{USER_EMAIL}}/g, email)
+    .replace(/{{CURRENT_YEAR}}/g, new Date().getFullYear().toString());
+
+  let html = fs.readFileSync(
+    path.join(import.meta.dirname, './templates/emailChange.html'),
+    'utf-8'
+  );
+  html = html
+    .replace(/{{USERNAME}}/g, username)
+    .replace(/{{OTP_CODE}}/g, otp)
+    .replace(/{{USER_EMAIL}}/g, email)
+    .replace(/{{CURRENT_YEAR}}/g, new Date().getFullYear().toString());
+
+  return sendEmail(email, subject, html, text);
+};
+
+export { sendVerificationEmail, sendPasswordResetEmail, sendChangeEmail };
