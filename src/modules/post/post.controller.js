@@ -1,7 +1,6 @@
 import ApiResponse from '../../utils/ApiResponse.js';
 import asyncHandler from '../../utils/asyncHandler.js';
-import { getUserById } from '../user/user.service.js';
-import { createPostService } from './post.service.js';
+import { createPostService, getRandomPostsService } from './post.service.js';
 
 /**
  * @description Handles the creation of a new post. It attaches the logged-in user's ID to the post data.
@@ -24,4 +23,16 @@ const createPost = asyncHandler(async (req, res, _next) => {
   ApiResponse.CREATED({ post }, 'Post created successfully').send(res);
 });
 
-export { createPost };
+/**
+ * @description Randomly fetches 10 posts excluding the provided IDs.
+ * @type {import('express').RequestHandler}
+ * @returns {import('express').Response}
+ */
+const getFeedPosts = asyncHandler(async (req, res, _next) => {
+  const { excludedPostIds = [] } = req.body;
+  const posts = await getRandomPostsService(excludedPostIds);
+
+  ApiResponse.OK({ posts }, 'Posts retrieved successfully').send(res);
+});
+
+export { createPost, getFeedPosts };

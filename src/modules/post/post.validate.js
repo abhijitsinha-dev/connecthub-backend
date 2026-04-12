@@ -33,4 +33,16 @@ const createPostSchema = customJoi
     'object.base': 'Request body must be an object',
   });
 
-export { createPostSchema };
+const getFeedPostsSchema = customJoi.object({
+  excludedPostIds: customJoi
+    .array()
+    .items(
+      customJoi.string().hex().length(24).messages({
+        'string.hex': 'Post ID must be a valid hex string',
+        'string.length': 'Post ID must be a valid 24-character ObjectId',
+      })
+    )
+    .default([]),
+});
+
+export { createPostSchema, getFeedPostsSchema };
