@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
  * @property {number} [attempts]
  * @property {number} [maxAttempts]
  * @property {'signup' | 'password-reset' | 'email-change'} type
+ * @property {boolean} isDemo
  * @property {Date} createdAt
  * @property {Date} updatedAt
  */
@@ -50,6 +51,11 @@ const otpSchema = new mongoose.Schema(
       type: String,
       enum: ['signup', 'password-reset', 'email-change'],
       required: true,
+    },
+
+    isDemo: {
+      type: Boolean,
+      default: false,
     },
   },
   {

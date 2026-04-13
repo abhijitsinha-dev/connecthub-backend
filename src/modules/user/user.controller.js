@@ -14,7 +14,7 @@ import {
  * @returns {import('express').Response}
  */
 const updateLoggedInUser = asyncHandler(async (req, res, _next) => {
-  const { id } = req.decodedToken;
+  const { id } = /** @type {any} */ (req).decodedToken;
   const user = await updateUserById(id, req.body);
 
   ApiResponse.OK({ user }, 'User updated successfully').send(res);
@@ -36,7 +36,7 @@ const searchUsers = asyncHandler(async (req, res, _next) => {
 const getUserByUsername = asyncHandler(async (req, res, _next) => {
   const { username } = req.params;
 
-  const user = await findUserByUsername(username);
+  const user = await findUserByUsername(String(username));
 
   ApiResponse.OK({ user }, 'User retrieved successfully').send(res);
 });
@@ -47,10 +47,10 @@ const getUserByUsername = asyncHandler(async (req, res, _next) => {
  * @returns {import('express').Response}
  */
 const followUser = asyncHandler(async (req, res, _next) => {
-  const { id: userId } = req.decodedToken;
+  const { id: userId } = /** @type {any} */ (req).decodedToken;
   const { targetUserId } = req.params;
 
-  await followUserById(userId, targetUserId);
+  await followUserById(userId, String(targetUserId));
 
   ApiResponse.OK({}, 'User followed successfully').send(res);
 });
@@ -61,10 +61,10 @@ const followUser = asyncHandler(async (req, res, _next) => {
  * @returns {import('express').Response}
  */
 const unfollowUser = asyncHandler(async (req, res, _next) => {
-  const { id: userId } = req.decodedToken;
+  const { id: userId } = /** @type {any} */ (req).decodedToken;
   const { targetUserId } = req.params;
 
-  await unfollowUserById(userId, targetUserId);
+  await unfollowUserById(userId, String(targetUserId));
 
   ApiResponse.OK({}, 'User unfollowed successfully').send(res);
 });

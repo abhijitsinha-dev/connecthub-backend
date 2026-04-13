@@ -159,7 +159,7 @@ const resetPassword = asyncHandler(async (req, res, _next) => {
  * @returns {import('express').Response}
  */
 const emailChangeRequest = asyncHandler(async (req, res, _next) => {
-  const { id } = req.decodedToken;
+  const { id } = /** @type {any} */ (req).decodedToken;
   const user = await getUserById(id);
   const { newEmail } = req.body;
 
@@ -194,7 +194,7 @@ const emailChangeRequest = asyncHandler(async (req, res, _next) => {
  * @returns {import('express').Response}
  */
 const emailChangeVerifyOTP = asyncHandler(async (req, res, _next) => {
-  const { id } = req.decodedToken;
+  const { id } = /** @type {any} */ (req).decodedToken;
   const { otp, newEmail } = req.body;
   await verifyOTP(id, otp, 'email-change');
   await updateUserById(id, { email: newEmail });
@@ -212,7 +212,7 @@ const emailChangeVerifyOTP = asyncHandler(async (req, res, _next) => {
  * @returns {import('express').Response}
  */
 const changePassword = asyncHandler(async (req, res, _next) => {
-  const { id } = req.decodedToken;
+  const { id } = /** @type {any} */ (req).decodedToken;
   const { oldPassword, newPassword } = req.body;
 
   const user = await changeUserPassword(id, oldPassword, newPassword);

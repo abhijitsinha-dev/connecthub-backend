@@ -2,8 +2,25 @@ import mongoose from 'mongoose';
 
 /**
  * @description Mongoose schema and model for the Post collection.
+ * @typedef {Object} PostFields
+ * @property {mongoose.Schema.Types.ObjectId} id
+ * @property {mongoose.Schema.Types.ObjectId} user
+ * @property {string} caption
+ * @property {Object} media
+ * @property {string} media.url
+ * @property {string} media.publicId
+ * @property {string} media.type
+ * @property {Array<mongoose.Schema.Types.ObjectId>} likedBy
+ * @property {boolean} isDemo
+ * @property {Date} createdAt
+ * @property {Date} updatedAt
  */
 
+/**
+ * @typedef {PostFields & import('mongoose').Document} PostDocument
+ */
+
+/** @type {import('mongoose').Schema<PostFields>} */
 const postSchema = new mongoose.Schema(
   {
     user: {
@@ -38,6 +55,12 @@ const postSchema = new mongoose.Schema(
         ref: 'User',
       },
     ],
+
+    isDemo: {
+      type: Boolean,
+      default: false,
+      select: false,
+    },
   },
   {
     timestamps: true,
@@ -71,6 +94,7 @@ postSchema.pre('validate', function () {
   }
 });
 
+/** @type {import('mongoose').Model<PostDocument>} */
 const Post = mongoose.model('Post', postSchema);
 
 export default Post;

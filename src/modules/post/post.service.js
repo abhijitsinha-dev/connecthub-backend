@@ -89,7 +89,7 @@ const getRandomPostsService = async (excludedPostIds = []) => {
  * @param {string} username Username of the target user
  * @param {number} page Page number for pagination
  * @param {number} limit Number of items per page
- * @returns {Promise<Object[]>}
+ * @returns {Promise<{posts: Object[], totalPosts: number}>}
  */
 const getPostsByUsernameService = async (username, page = 1, limit = 10) => {
   // 1. Fetch ONLY the user's _id. We don't need anything else.
@@ -101,16 +101,65 @@ const getPostsByUsernameService = async (username, page = 1, limit = 10) => {
 
   const skip = (page - 1) * limit;
 
-  // 2. Fetch the posts. No joins, no populates, no aggregation.
-  const posts = await Post.find({ user: user._id })
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  // 2. Fetch the posts and the total count in parallel
+  const [posts, totalPosts] = await Promise.all([
+    Post.find({ user: user._id })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Post.countDocuments({ user: user._id }),
+  ]);
 
   // 3. Format using the schema rules you already wrote
   const formattedPosts = posts.map(post => post.toJSON());
 
-  return formattedPosts;
+  return { posts: formattedPosts, totalPosts };
 };
 
-export { createPostService, getRandomPostsService, getPostsByUsernameService };
+/**
+ * @description Adds a like to a post for a specific user.
+ * @param {string | mongoose.Schema.Types.ObjectId} postId 
+ * @param {string | mongoose.Schema.Types.ObjectId} userId 
+ * @returns {Promise<void>}
+ */
+const likePostService = async (postId, userId) => {
+  const post = await Post.findById(postId).select('_id likedBy');
+  if (!post) {
+    throw ApiError.NOT_FOUND('postId');
+  }
+
+  const isLiked = post.likedBy.some(id => id.toString() === userId.toString());
+  if (isLiked) {
+    throw new ApiError(400, 'Post is already liked');
+  }
+
+  await Post.findByIdAndUpdate(postId, { $addToSet: { likedBy: userId } });
+};
+
+/**
+ * @description Removes a like from a post for a specific user.
+ * @param {string | mongoose.Schema.Types.ObjectId} postId 
+ * @param {string | mongoose.Schema.Types.ObjectId} userId 
+ * @returns {Promise<void>}
+ */
+const unlikePostService = async (postId, userId) => {
+  const post = await Post.findById(postId).select('_id likedBy');
+  if (!post) {
+    throw ApiError.NOT_FOUND('postId');
+  }
+
+  const isLiked = post.likedBy.some(id => id.toString() === userId.toString());
+  if (!isLiked) {
+    throw new ApiError(400, 'Post is not liked');
+  }
+
+  await Post.findByIdAndUpdate(postId, { $pull: { likedBy: userId } });
+};
+
+export {
+  createPostService,
+  getRandomPostsService,
+  getPostsByUsernameService,
+  likePostService,
+  unlikePostService,
+};

@@ -22,6 +22,7 @@ import bcrypt from 'bcryptjs';
  * @property {'active' | 'inactive' | 'deactivated' | 'deleted' | 'suspended'} status
  * @property {Array<mongoose.Schema.Types.ObjectId>} followers
  * @property {Array<mongoose.Schema.Types.ObjectId>} following
+ * @property {boolean} isDemo
  * @property {Date} createdAt
  * @property {Date} updatedAt
  */
@@ -174,6 +175,12 @@ const userSchema = new mongoose.Schema(
         ref: 'User',
       },
     ],
+
+    isDemo: {
+      type: Boolean,
+      default: false,
+      select: false,
+    },
   },
   {
     timestamps: true,
