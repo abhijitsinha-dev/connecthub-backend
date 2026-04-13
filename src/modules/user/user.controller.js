@@ -4,6 +4,8 @@ import {
   findUserByUsername,
   searchUsersAtlas,
   updateUserById,
+  followUserById,
+  unfollowUserById,
 } from './user.service.js';
 
 /**
@@ -39,4 +41,38 @@ const getUserByUsername = asyncHandler(async (req, res, _next) => {
   ApiResponse.OK({ user }, 'User retrieved successfully').send(res);
 });
 
-export { updateLoggedInUser, searchUsers, getUserByUsername };
+/**
+ * @description Follows a target user
+ * @type {import('express').RequestHandler}
+ * @returns {import('express').Response}
+ */
+const followUser = asyncHandler(async (req, res, _next) => {
+  const { id: userId } = req.decodedToken;
+  const { targetUserId } = req.params;
+
+  await followUserById(userId, targetUserId);
+
+  ApiResponse.OK({}, 'User followed successfully').send(res);
+});
+
+/**
+ * @description Unfollows a target user
+ * @type {import('express').RequestHandler}
+ * @returns {import('express').Response}
+ */
+const unfollowUser = asyncHandler(async (req, res, _next) => {
+  const { id: userId } = req.decodedToken;
+  const { targetUserId } = req.params;
+
+  await unfollowUserById(userId, targetUserId);
+
+  ApiResponse.OK({}, 'User unfollowed successfully').send(res);
+});
+
+export {
+  updateLoggedInUser,
+  searchUsers,
+  getUserByUsername,
+  followUser,
+  unfollowUser,
+};

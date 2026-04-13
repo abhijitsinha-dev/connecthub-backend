@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import Post from './post.model.js';
+import User from '../user/user.model.js';
+import ApiError from '../../utils/ApiError.js';
 
 /**
  * @description Creates a new post with the provided data.
@@ -82,4 +84,33 @@ const getRandomPostsService = async (excludedPostIds = []) => {
   return posts;
 };
 
-export { createPostService, getRandomPostsService };
+/**
+ * @description Retrieves posts created by a specific user, sorted from newest to oldest.
+ * @param {string} username Username of the target user
+ * @param {number} page Page number for pagination
+ * @param {number} limit Number of items per page
+ * @returns {Promise<Object[]>}
+ */
+const getPostsByUsernameService = async (username, page = 1, limit = 10) => {
+  // 1. Fetch ONLY the user's _id. We don't need anything else.
+  const user = await User.findOne({ username }).select('_id');
+
+  if (!user) {
+    throw ApiError.NOT_FOUND('username');
+  }
+
+  const skip = (page - 1) * limit;
+
+  // 2. Fetch the posts. No joins, no populates, no aggregation.
+  const posts = await Post.find({ user: user._id })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  // 3. Format using the schema rules you already wrote
+  const formattedPosts = posts.map(post => post.toJSON());
+
+  return formattedPosts;
+};
+
+export { createPostService, getRandomPostsService, getPostsByUsernameService };

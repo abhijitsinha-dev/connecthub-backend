@@ -19,6 +19,9 @@ import bcrypt from 'bcryptjs';
  * @property {string=} bio
  * @property {Date=} dateOfBirth
  * @property {string=} address
+ * @property {'active' | 'inactive' | 'deactivated' | 'deleted' | 'suspended'} status
+ * @property {Array<mongoose.Schema.Types.ObjectId>} followers
+ * @property {Array<mongoose.Schema.Types.ObjectId>} following
  * @property {Date} createdAt
  * @property {Date} updatedAt
  */
@@ -151,6 +154,26 @@ const userSchema = new mongoose.Schema(
         'address length must be less than or equal to 200 characters long',
       ],
     },
+
+    status: {
+      type: String,
+      enum: ['active', 'inactive', 'deactivated', 'deleted', 'suspended'],
+      default: 'inactive',
+    },
+
+    followers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+
+    following: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     timestamps: true,

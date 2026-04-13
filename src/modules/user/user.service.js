@@ -61,6 +61,7 @@ const verifyUserEmail = async userId => {
     throw ApiError.NOT_FOUND('userId');
   }
   user.emailVerified = true;
+  user.status = 'active';
   await user.save();
 };
 
@@ -226,6 +227,74 @@ const changeUserPassword = async (userId, oldPassword, newPassword) => {
   return (await user.save()).toJSON();
 };
 
+/**
+ * @description Follows a target user. Adds the target user to the current user's 'following' list, and the current user to the target's 'followers' list.
+ * @param {import('mongoose').Schema.Types.ObjectId | string} userId
+ * @param {import('mongoose').Schema.Types.ObjectId | string} targetUserId
+ * @throws {import('../utils/ApiError.js').ApiError}
+ */
+const followUserById = async (userId, targetUserId) => {
+  if (userId.toString() === targetUserId.toString()) {
+    throw new ApiError(400, 'You cannot follow yourself');
+  }
+
+  const userToFollow = await User.findById(targetUserId).select('_id');
+  if (!userToFollow) {
+    throw ApiError.NOT_FOUND('targetUserId');
+  }
+
+  const currentUser = await User.findById(userId).select('following');
+  if (!currentUser) {
+    throw ApiError.NOT_FOUND('userId');
+  }
+
+  const isFollowing = currentUser.following.some(
+    id => id.toString() === targetUserId.toString()
+  );
+  if (isFollowing) {
+    throw new ApiError(400, 'You are already following this user');
+  }
+
+  await Promise.all([
+    User.findByIdAndUpdate(userId, { $addToSet: { following: targetUserId } }),
+    User.findByIdAndUpdate(targetUserId, { $addToSet: { followers: userId } }),
+  ]);
+};
+
+/**
+ * @description Unfollows a target user. Removes the target user from the current user's 'following' list, and the current user from the target's 'followers' list.
+ * @param {import('mongoose').Schema.Types.ObjectId | string} userId
+ * @param {import('mongoose').Schema.Types.ObjectId | string} targetUserId
+ * @throws {import('../utils/ApiError.js').ApiError}
+ */
+const unfollowUserById = async (userId, targetUserId) => {
+  if (userId.toString() === targetUserId.toString()) {
+    throw new ApiError(400, 'You cannot unfollow yourself');
+  }
+
+  const userToUnfollow = await User.findById(targetUserId).select('_id');
+  if (!userToUnfollow) {
+    throw ApiError.NOT_FOUND('targetUserId');
+  }
+
+  const currentUser = await User.findById(userId).select('following');
+  if (!currentUser) {
+    throw ApiError.NOT_FOUND('userId');
+  }
+
+  const isFollowing = currentUser.following.some(
+    id => id.toString() === targetUserId.toString()
+  );
+  if (!isFollowing) {
+    throw new ApiError(400, 'You are not following this user');
+  }
+
+  await Promise.all([
+    User.findByIdAndUpdate(userId, { $pull: { following: targetUserId } }),
+    User.findByIdAndUpdate(targetUserId, { $pull: { followers: userId } }),
+  ]);
+};
+
 export {
   createUser,
   verifyUserEmail,
@@ -237,4 +306,6 @@ export {
   searchUsersAtlas,
   findUserByUsername,
   changeUserPassword,
+  followUserById,
+  unfollowUserById,
 };

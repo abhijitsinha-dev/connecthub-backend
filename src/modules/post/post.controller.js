@@ -1,6 +1,10 @@
 import ApiResponse from '../../utils/ApiResponse.js';
 import asyncHandler from '../../utils/asyncHandler.js';
-import { createPostService, getRandomPostsService } from './post.service.js';
+import {
+  createPostService,
+  getRandomPostsService,
+  getPostsByUsernameService,
+} from './post.service.js';
 
 /**
  * @description Handles the creation of a new post. It attaches the logged-in user's ID to the post data.
@@ -35,4 +39,19 @@ const getFeedPosts = asyncHandler(async (req, res, _next) => {
   ApiResponse.OK({ posts }, 'Posts retrieved successfully').send(res);
 });
 
-export { createPost, getFeedPosts };
+/**
+ * @description Fetches paginated posts created by a specific user.
+ * @type {import('express').RequestHandler}
+ * @returns {import('express').Response}
+ */
+const getPostsByUsername = asyncHandler(async (req, res, _next) => {
+  const { username } = req.params;
+  const page = parseInt(req?.query?.page, 10) || 1;
+  const limit = parseInt(req?.query?.limit, 10) || 10;
+
+  const posts = await getPostsByUsernameService(username, page, limit);
+
+  ApiResponse.OK({ posts }, 'User posts retrieved successfully').send(res);
+});
+
+export { createPost, getFeedPosts, getPostsByUsername };
