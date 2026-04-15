@@ -20,42 +20,44 @@ import mongoose from 'mongoose';
 /** @type {import('mongoose').Schema<OTPFields>} */
 const otpSchema = new mongoose.Schema(
   {
+    // The user associated with this OTP. This should be a reference to the User collection.
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
-      unique: true,
+      required: [true, 'userId is required'],
     },
-
+    // The actual OTP value. In a production system, this should be securely hashed before storage.
     otp: {
       type: String,
-      required: true,
+      required: [true, 'otp is required'],
     },
-
+    // The expiration time for this OTP. MongoDB will automatically delete the document after this time due to the TTL index defined below.
     expiresAt: {
       type: Date,
-      required: true,
+      required: [true, 'expiresAt is required'],
     },
-
+    // The number of verification attempts made with this OTP. This can be used to implement a lockout mechanism after a certain number of failed attempts.
     attempts: {
       type: Number,
       default: 0,
     },
-
+    // The maximum number of allowed verification attempts before the OTP is considered invalid. This can help prevent brute-force attacks.
     maxAttempts: {
       type: Number,
       default: 5,
     },
-
+    // The type of OTP, which can be used to differentiate between different use cases (e.g., signup verification, password reset, email change). This allows for more flexible handling of OTPs in the application.
     type: {
       type: String,
       enum: ['signup', 'password-reset', 'email-change'],
       required: true,
     },
 
+    // A flag to indicate if this OTP is part of demo data. This can be useful for filtering out demo OTPs in production environments.
     isDemo: {
       type: Boolean,
       default: false,
+      select: false,
     },
   },
   {
@@ -65,6 +67,8 @@ const otpSchema = new mongoose.Schema(
 
 // TTL index to automatically delete expired OTP documents
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+// Index to optimize queries for fetching OTPs by user and type
+otpSchema.index({ userId: 1, type: 1 }, { unique: true });
 
 /** @type {import('mongoose').Model<OTPFields, {}, {}, {}, OTPDocument>} */
 const OTP = mongoose.model('OTP', otpSchema);

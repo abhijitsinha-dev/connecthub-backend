@@ -4,8 +4,6 @@ import {
   createPostService,
   getRandomPostsService,
   getPostsByUsernameService,
-  likePostService,
-  unlikePostService,
 } from './post.service.js';
 
 /**
@@ -35,8 +33,12 @@ const createPost = asyncHandler(async (req, res, _next) => {
  * @returns {import('express').Response}
  */
 const getFeedPosts = asyncHandler(async (req, res, _next) => {
+  const { id: currentUserId } = /** @type {any} */ (req).decodedToken;
   const { excludedPostIds = [] } = req.body;
-  const posts = await getRandomPostsService(excludedPostIds);
+  const posts = await getRandomPostsService(
+    excludedPostIds,
+    String(currentUserId)
+  );
 
   ApiResponse.OK({ posts }, 'Posts retrieved successfully').send(res);
 });
@@ -47,41 +49,22 @@ const getFeedPosts = asyncHandler(async (req, res, _next) => {
  * @returns {import('express').Response}
  */
 const getPostsByUsername = asyncHandler(async (req, res, _next) => {
+  const { id: currentUserId } = /** @type {any} */ (req).decodedToken;
   const { username } = req.params;
   const page = parseInt(String(req?.query?.page), 10) || 1;
   const limit = parseInt(String(req?.query?.limit), 10) || 10;
 
-  const { posts, totalPosts } = await getPostsByUsernameService(String(username), page, limit);
+  const { posts, totalPosts } = await getPostsByUsernameService(
+    String(username),
+    page,
+    limit,
+    String(currentUserId)
+  );
 
-  ApiResponse.OK({ posts, totalPosts }, 'User posts retrieved successfully').send(res);
+  ApiResponse.OK(
+    { posts, totalPosts },
+    'User posts retrieved successfully'
+  ).send(res);
 });
 
-/**
- * @description Likes a post
- * @type {import('express').RequestHandler}
- * @returns {import('express').Response}
- */
-const likePost = asyncHandler(async (req, res, _next) => {
-  const { id: userId } = /** @type {any} */ (req).decodedToken;
-  const { postId } = req.params;
-
-  await likePostService(String(postId), userId);
-
-  ApiResponse.OK({}, 'Post liked successfully').send(res);
-});
-
-/**
- * @description Unlikes a post
- * @type {import('express').RequestHandler}
- * @returns {import('express').Response}
- */
-const unlikePost = asyncHandler(async (req, res, _next) => {
-  const { id: userId } = /** @type {any} */ (req).decodedToken;
-  const { postId } = req.params;
-
-  await unlikePostService(String(postId), userId);
-
-  ApiResponse.OK({}, 'Post unliked successfully').send(res);
-});
-
-export { createPost, getFeedPosts, getPostsByUsername, likePost, unlikePost };
+export { createPost, getFeedPosts, getPostsByUsername };

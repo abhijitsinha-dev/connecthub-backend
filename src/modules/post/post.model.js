@@ -10,7 +10,8 @@ import mongoose from 'mongoose';
  * @property {string} media.url
  * @property {string} media.publicId
  * @property {string} media.type
- * @property {Array<mongoose.Schema.Types.ObjectId>} likedBy
+ * @property {number} likesCount
+ * @property {number} commentsCount
  * @property {boolean} isDemo
  * @property {Date} createdAt
  * @property {Date} updatedAt
@@ -23,12 +24,13 @@ import mongoose from 'mongoose';
 /** @type {import('mongoose').Schema<PostFields>} */
 const postSchema = new mongoose.Schema(
   {
+    // The user who created the post
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: [true, 'user is required'],
-      index: true,
     },
+    // The text caption of the post
     caption: {
       type: String,
       trim: true,
@@ -37,6 +39,7 @@ const postSchema = new mongoose.Schema(
         'caption length must be less than or equal to 300 characters',
       ],
     },
+    // Optional media associated with the post (image or video)
     media: {
       url: {
         type: String,
@@ -49,13 +52,18 @@ const postSchema = new mongoose.Schema(
         enum: ['image', 'video'],
       },
     },
-    likedBy: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
+    // A count of how many likes this post has received. This is denormalized for performance.
+    likesCount: {
+      type: Number,
+      default: 0,
+    },
+    // A count of how many comments this post has received. This is denormalized for performance.
+    commentsCount: {
+      type: Number,
+      default: 0,
+    },
 
+    // A flag to indicate if this post is part of demo data. This can be useful for filtering out demo posts in production.
     isDemo: {
       type: Boolean,
       default: false,
@@ -82,6 +90,11 @@ const postSchema = new mongoose.Schema(
     },
   }
 );
+
+// Index to optimize fetching a user's posts in reverse chronological order (for profile feeds)
+postSchema.index({ user: 1, createdAt: -1 });
+// Index to optimize fetching recent posts for the main feed
+postSchema.index({ createdAt: -1 });
 
 // Pre-validate hook to make sure a post has either a caption or media
 postSchema.pre('validate', function () {

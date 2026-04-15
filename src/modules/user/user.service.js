@@ -162,27 +162,55 @@ const updateUserById = async (userId, updateData) => {
 };
 
 const searchUsersAtlas = async searchTerm => {
-  if (!searchTerm) return [];
+  if (!searchTerm || searchTerm.trim().length === 0) return [];
 
   const pipeline = [
     {
       $search: {
-        index: 'default', // Replace with your index name if different
-        text: {
-          query: searchTerm,
-          path: 'username',
-          fuzzy: {
-            maxEdits: 2,
-          },
+        index: 'user_search',
+        // 'compound' lets us search multiple fields at once
+        compound: {
+          should: [
+            {
+              // Search-As-You-Type on Username
+              autocomplete: {
+                query: searchTerm,
+                path: 'username',
+                fuzzy: { maxEdits: 1, prefixLength: 1 }, // Allows 1 typo
+              },
+            },
+            {
+              // Search-As-You-Type on Full Name
+              autocomplete: {
+                query: searchTerm,
+                path: 'fullName',
+                fuzzy: { maxEdits: 1, prefixLength: 1 }, // Allows 1 typo
+              },
+            },
+          ],
         },
+      },
+    },
+    { $limit: 15 },
+    {
+      $project: {
+        _id: 0,
+        id: '$_id',
+        username: 1,
+        fullName: 1,
+        avatar: 1,
+        score: { $meta: 'searchScore' },
       },
     },
   ];
 
-  const users = await User.aggregate(pipeline);
-  console.log(users);
-
-  return users;
+  try {
+    const users = await User.aggregate(pipeline);
+    return users;
+  } catch (error) {
+    console.error('🔴 ATLAS SEARCH FATAL ERROR:', error.message);
+    throw error;
+  }
 };
 
 /**

@@ -6,8 +6,6 @@ import {
   createPost,
   getFeedPosts,
   getPostsByUsername,
-  likePost,
-  unlikePost,
 } from './post.controller.js';
 
 const router = Router();
@@ -18,11 +16,7 @@ router.route('/').post(protect, validate(createPostSchema), createPost);
 // Route to get a randomized feed of posts, with potential exclusion logic
 router.route('/feed').post(protect, validate(getFeedPostsSchema), getFeedPosts);
 
-// Route to like and unlike a specific post
-router.route('/:postId/like').post(protect, likePost);
-router.route('/:postId/unlike').post(protect, unlikePost);
-
 // Route to get a specific user's posts
-router.route('/:username').get(protect, getPostsByUsername);
+router.route('/user/:username').get(protect, getPostsByUsername);
 
 export default router;

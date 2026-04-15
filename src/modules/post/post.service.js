@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import Post from './post.model.js';
 import User from '../user/user.model.js';
+import Like from '../interaction/like.model.js';
 import ApiError from '../../utils/ApiError.js';
 
 /**
@@ -16,9 +17,13 @@ const createPostService = async postData => {
 /**
  * @description Retrieves a random feed of 10 posts while ignoring the provided excluded post IDs.
  * @param {string[]} excludedPostIds Array of MongoDB ObjectIds as strings
+ * @param {string | null} currentUserId Logged in user ID for computing like state
  * @returns {Promise<Object[]>}
  */
-const getRandomPostsService = async (excludedPostIds = []) => {
+const getRandomPostsService = async (
+  excludedPostIds = [],
+  currentUserId = null
+) => {
   const limit = 10;
 
   // 1. Convert excluded IDs safely
@@ -81,7 +86,35 @@ const getRandomPostsService = async (excludedPostIds = []) => {
   ];
 
   const posts = await Post.aggregate(pipeline);
-  return posts;
+
+  const postIds = posts
+    .map(post => post.id)
+    .filter(id => mongoose.Types.ObjectId.isValid(id))
+    .map(id => new mongoose.Types.ObjectId(id));
+
+  let likedPostIdSet = new Set();
+  if (
+    currentUserId &&
+    postIds.length > 0 &&
+    mongoose.Types.ObjectId.isValid(currentUserId)
+  ) {
+    const likedPosts = await Like.find({
+      user: new mongoose.Types.ObjectId(currentUserId),
+      onModel: 'Post',
+      likedItemId: { $in: postIds },
+    })
+      .select('likedItemId')
+      .lean();
+
+    likedPostIdSet = new Set(
+      likedPosts.map(like => like.likedItemId.toString())
+    );
+  }
+
+  return posts.map(post => ({
+    ...post,
+    isLikedByCurrentUser: likedPostIdSet.has(String(post.id)),
+  }));
 };
 
 /**
@@ -89,9 +122,15 @@ const getRandomPostsService = async (excludedPostIds = []) => {
  * @param {string} username Username of the target user
  * @param {number} page Page number for pagination
  * @param {number} limit Number of items per page
+ * @param {string | null} currentUserId Logged in user ID for computing like state
  * @returns {Promise<{posts: Object[], totalPosts: number}>}
  */
-const getPostsByUsernameService = async (username, page = 1, limit = 10) => {
+const getPostsByUsernameService = async (
+  username,
+  page = 1,
+  limit = 10,
+  currentUserId = null
+) => {
   // 1. Fetch ONLY the user's _id. We don't need anything else.
   const user = await User.findOne({ username }).select('_id');
 
@@ -110,56 +149,36 @@ const getPostsByUsernameService = async (username, page = 1, limit = 10) => {
     Post.countDocuments({ user: user._id }),
   ]);
 
+  const postIds = posts.map(post => post._id);
+
+  let likedPostIdSet = new Set();
+  if (
+    currentUserId &&
+    postIds.length > 0 &&
+    mongoose.Types.ObjectId.isValid(currentUserId)
+  ) {
+    const likedPosts = await Like.find({
+      user: new mongoose.Types.ObjectId(currentUserId),
+      onModel: 'Post',
+      likedItemId: { $in: postIds },
+    })
+      .select('likedItemId')
+      .lean();
+
+    likedPostIdSet = new Set(
+      likedPosts.map(like => like.likedItemId.toString())
+    );
+  }
+
   // 3. Format using the schema rules you already wrote
   const formattedPosts = posts.map(post => post.toJSON());
 
-  return { posts: formattedPosts, totalPosts };
+  const postsWithLikeStatus = formattedPosts.map(post => ({
+    ...post,
+    isLikedByCurrentUser: likedPostIdSet.has(String(post.id)),
+  }));
+
+  return { posts: postsWithLikeStatus, totalPosts };
 };
 
-/**
- * @description Adds a like to a post for a specific user.
- * @param {string | mongoose.Schema.Types.ObjectId} postId 
- * @param {string | mongoose.Schema.Types.ObjectId} userId 
- * @returns {Promise<void>}
- */
-const likePostService = async (postId, userId) => {
-  const post = await Post.findById(postId).select('_id likedBy');
-  if (!post) {
-    throw ApiError.NOT_FOUND('postId');
-  }
-
-  const isLiked = post.likedBy.some(id => id.toString() === userId.toString());
-  if (isLiked) {
-    throw new ApiError(400, 'Post is already liked');
-  }
-
-  await Post.findByIdAndUpdate(postId, { $addToSet: { likedBy: userId } });
-};
-
-/**
- * @description Removes a like from a post for a specific user.
- * @param {string | mongoose.Schema.Types.ObjectId} postId 
- * @param {string | mongoose.Schema.Types.ObjectId} userId 
- * @returns {Promise<void>}
- */
-const unlikePostService = async (postId, userId) => {
-  const post = await Post.findById(postId).select('_id likedBy');
-  if (!post) {
-    throw ApiError.NOT_FOUND('postId');
-  }
-
-  const isLiked = post.likedBy.some(id => id.toString() === userId.toString());
-  if (!isLiked) {
-    throw new ApiError(400, 'Post is not liked');
-  }
-
-  await Post.findByIdAndUpdate(postId, { $pull: { likedBy: userId } });
-};
-
-export {
-  createPostService,
-  getRandomPostsService,
-  getPostsByUsernameService,
-  likePostService,
-  unlikePostService,
-};
+export { createPostService, getRandomPostsService, getPostsByUsernameService };

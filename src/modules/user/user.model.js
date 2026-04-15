@@ -34,6 +34,7 @@ import bcrypt from 'bcryptjs';
 /** @type {import('mongoose').Schema<UserFields>} */
 const userSchema = new mongoose.Schema(
   {
+    // Username must be unique, lowercase, and can only contain letters, numbers, underscores, and hyphens
     username: {
       type: String,
       required: [true, 'username is required'],
@@ -50,7 +51,7 @@ const userSchema = new mongoose.Schema(
       ],
       lowercase: true,
     },
-
+    // Full name is optional but if provided, it must be between 5 and 50 characters long
     fullName: {
       type: String,
       trim: true,
@@ -60,7 +61,7 @@ const userSchema = new mongoose.Schema(
         'fullName length must be less than or equal to 50 characters long',
       ],
     },
-
+    // Email must be unique, lowercase, and a valid email format
     email: {
       type: String,
       required: [true, 'email is required'],
@@ -73,12 +74,12 @@ const userSchema = new mongoose.Schema(
         type: 'string.email',
       },
     },
-
+    // Flag to indicate if the user's email has been verified. This is important for account activation and security.
     emailVerified: {
       type: Boolean,
       default: false,
     },
-
+    // Password must be between 8 and 128 characters long and meet strong password criteria (at least one uppercase letter, one lowercase letter, one number, and one symbol)
     password: {
       type: String,
       required: true,
@@ -95,17 +96,17 @@ const userSchema = new mongoose.Schema(
       },
       select: false,
     },
-
+    // Optional phone number field with validation to ensure it's a valid mobile phone number
     phoneNumber: {
       type: String,
       trim: true,
     },
-
+    // Flag to indicate if the user's phone number has been verified. This can be used for additional security measures like two-factor authentication.
     phoneNumberVerified: {
       type: Boolean,
       default: false,
     },
-
+    // Avatar field to store the URL and public ID of the user's profile picture. This allows for easy integration with cloud storage services like Cloudinary.
     avatar: {
       url: {
         type: String,
@@ -116,7 +117,7 @@ const userSchema = new mongoose.Schema(
         default: '',
       },
     },
-
+    // Cover image field to store the URL and public ID of the user's cover photo. This enhances the user's profile customization options.
     coverImage: {
       url: {
         type: String,
@@ -127,12 +128,12 @@ const userSchema = new mongoose.Schema(
         default: '',
       },
     },
-
+    // Optional gender
     gender: {
       type: String,
       enum: ['male', 'female', 'other', 'prefer not to say'],
     },
-
+    // Optional bio field with a maximum length of 200 characters to allow users to share a brief description about themselves.
     bio: {
       type: String,
       trim: true,
@@ -141,12 +142,12 @@ const userSchema = new mongoose.Schema(
         'bio length must be less than or equal to 200 characters long',
       ],
     },
-
+    // Optional date of birth field to allow users to share their birthdate if they choose to. This can be used for age verification or personalized content.
     dateOfBirth: {
       type: Date,
       default: null,
     },
-
+    // Optional address field with a maximum length of 200 characters to allow users to share their location if they choose to.
     address: {
       type: String,
       trim: true,
@@ -155,7 +156,7 @@ const userSchema = new mongoose.Schema(
         'address length must be less than or equal to 200 characters long',
       ],
     },
-
+    // Status field to represent the user's account state. This can be used to manage user access and visibility on the platform.
     status: {
       type: String,
       enum: ['active', 'inactive', 'deactivated', 'deleted', 'suspended'],
@@ -176,6 +177,7 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
+    // A flag to indicate if this user is part of demo data. This can be useful for filtering out demo users in production.
     isDemo: {
       type: Boolean,
       default: false,
@@ -215,6 +217,8 @@ userSchema.index(
     partialFilterExpression: { emailVerified: false },
   }
 );
+// Index to optimize queries for searching users by username and email
+userSchema.index({ fullName: 1 });
 
 // Pre-save hook to hash password if it's new or modified
 userSchema.pre('save', async function () {
