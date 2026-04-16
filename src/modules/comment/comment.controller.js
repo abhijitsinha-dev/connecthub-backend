@@ -26,6 +26,7 @@ const commentOnPost = asyncHandler(async (req, res, _next) => {
  * @returns {import('express').Response}
  */
 const getCommentsByPost = asyncHandler(async (req, res, _next) => {
+  const { id: userId } = /** @type {any} */ (req).decodedToken;
   const { postId } = req.params;
   const page = parseInt(String(req?.query?.page), 10) || 1;
   const limit = parseInt(String(req?.query?.limit), 10) || 10;
@@ -33,7 +34,8 @@ const getCommentsByPost = asyncHandler(async (req, res, _next) => {
   const { comments, commentsCount } = await getCommentsByPostService(
     String(postId),
     page,
-    limit
+    limit,
+    userId
   );
 
   ApiResponse.OK(

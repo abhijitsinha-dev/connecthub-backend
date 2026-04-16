@@ -4,6 +4,8 @@ import {
   getPostLikersByPostId,
   likePostById,
   unlikePostById,
+  likeCommentById,
+  unlikeCommentById,
 } from './like.service.js';
 
 /**
@@ -49,4 +51,32 @@ const getPostLikers = asyncHandler(async (req, res, _next) => {
   ApiResponse.OK(data, 'Post likers fetched successfully').send(res);
 });
 
-export { getPostLikers, likePost, unlikePost };
+/**
+ * @description Likes a comment.
+ * @type {import('express').RequestHandler}
+ * @returns {import('express').Response}
+ */
+const likeComment = asyncHandler(async (req, res, _next) => {
+  const { id: userId } = /** @type {any} */ (req).decodedToken;
+  const { commentId } = req.params;
+
+  await likeCommentById(String(commentId), String(userId));
+
+  ApiResponse.OK({}, 'Comment liked successfully').send(res);
+});
+
+/**
+ * @description Unlikes a comment.
+ * @type {import('express').RequestHandler}
+ * @returns {import('express').Response}
+ */
+const unlikeComment = asyncHandler(async (req, res, _next) => {
+  const { id: userId } = /** @type {any} */ (req).decodedToken;
+  const { commentId } = req.params;
+
+  await unlikeCommentById(String(commentId), String(userId));
+
+  ApiResponse.OK({}, 'Comment unliked successfully').send(res);
+});
+
+export { getPostLikers, likePost, unlikePost, likeComment, unlikeComment };

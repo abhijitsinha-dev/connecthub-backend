@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import ApiError from '../../utils/ApiError.js';
 import Post from '../post/post.model.js';
+import Comment from '../comment/comment.model.js';
 import Like from './like.model.js';
 
 /**
@@ -121,4 +122,95 @@ const getPostLikersByPostId = async (postId, { page = 1, limit = 10 }) => {
   };
 };
 
-export { likePostById, unlikePostById, getPostLikersByPostId };
+/**
+ * @param {string} commentId
+ */
+const validateCommentId = commentId => {
+  if (!mongoose.Types.ObjectId.isValid(commentId)) {
+    throw new ApiError(400, 'commentId must be a valid ObjectId', [
+      {
+        field: 'commentId',
+        constraint: 'invalid',
+        message: 'commentId must be a valid ObjectId',
+      },
+    ]);
+  }
+};
+
+/**
+ * @description Likes a comment by creating a Like document and incrementing comment likesCount.
+ * @param {string} commentId
+ * @param {string} userId
+ * @returns {Promise<void>}
+ */
+const likeCommentById = async (commentId, userId) => {
+  validateCommentId(commentId);
+
+  const comment = await Comment.findById(commentId).select('_id');
+  if (!comment) {
+    throw ApiError.NOT_FOUND('commentId');
+  }
+
+  try {
+    await Like.create({
+      user: userId,
+      onModel: 'Comment',
+      likedItemId: commentId,
+    });
+  } catch (error) {
+    if (
+      error instanceof mongoose.mongo.MongoServerError &&
+      error.code === 11000
+    ) {
+      throw new ApiError(400, 'Comment is already liked');
+    }
+
+    throw error;
+  }
+
+  await Comment.findByIdAndUpdate(commentId, {
+    $inc: { likesCount: 1 },
+  });
+};
+
+/**
+ * @description Unlikes a comment by removing Like document and decrementing comment likesCount.
+ * @param {string} commentId
+ * @param {string} userId
+ * @returns {Promise<void>}
+ */
+const unlikeCommentById = async (commentId, userId) => {
+  validateCommentId(commentId);
+
+  const comment = await Comment.findById(commentId).select('_id');
+  if (!comment) {
+    throw ApiError.NOT_FOUND('commentId');
+  }
+
+  const deletedLike = await Like.findOneAndDelete({
+    user: userId,
+    onModel: 'Comment',
+    likedItemId: commentId,
+  });
+
+  if (!deletedLike) {
+    throw new ApiError(400, 'Comment is not liked');
+  }
+
+  const updatedComment = await Comment.findOneAndUpdate(
+    { _id: commentId, likesCount: { $gt: 0 } },
+    { $inc: { likesCount: -1 } }
+  );
+
+  if (!updatedComment) {
+    await Comment.findByIdAndUpdate(commentId, { $set: { likesCount: 0 } });
+  }
+};
+
+export {
+  likePostById,
+  unlikePostById,
+  getPostLikersByPostId,
+  likeCommentById,
+  unlikeCommentById,
+};
