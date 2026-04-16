@@ -4,8 +4,6 @@ import {
   findUserByUsername,
   searchUsersAtlas,
   updateUserById,
-  followUserById,
-  unfollowUserById,
 } from './user.service.js';
 
 /**
@@ -35,44 +33,11 @@ const searchUsers = asyncHandler(async (req, res, _next) => {
  */
 const getUserByUsername = asyncHandler(async (req, res, _next) => {
   const { username } = req.params;
+  const { id: visitorId } = /** @type {any} */ (req).decodedToken;
 
-  const user = await findUserByUsername(String(username));
+  const user = await findUserByUsername(String(username), visitorId);
 
   ApiResponse.OK({ user }, 'User retrieved successfully').send(res);
 });
 
-/**
- * @description Follows a target user
- * @type {import('express').RequestHandler}
- * @returns {import('express').Response}
- */
-const followUser = asyncHandler(async (req, res, _next) => {
-  const { id: userId } = /** @type {any} */ (req).decodedToken;
-  const { targetUserId } = req.params;
-
-  await followUserById(userId, String(targetUserId));
-
-  ApiResponse.OK({}, 'User followed successfully').send(res);
-});
-
-/**
- * @description Unfollows a target user
- * @type {import('express').RequestHandler}
- * @returns {import('express').Response}
- */
-const unfollowUser = asyncHandler(async (req, res, _next) => {
-  const { id: userId } = /** @type {any} */ (req).decodedToken;
-  const { targetUserId } = req.params;
-
-  await unfollowUserById(userId, String(targetUserId));
-
-  ApiResponse.OK({}, 'User unfollowed successfully').send(res);
-});
-
-export {
-  updateLoggedInUser,
-  searchUsers,
-  getUserByUsername,
-  followUser,
-  unfollowUser,
-};
+export { updateLoggedInUser, searchUsers, getUserByUsername };

@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 /**
  * @description This file defines the Mongoose schema and model for the OTP (One-Time Password) collection. It includes fields for user association, OTP value, expiration time, verification attempts, and timestamps. The schema also sets up a TTL index to automatically delete expired OTP documents.
  * @typedef {Object} OTPFields
- * @property {mongoose.Schema.Types.ObjectId} userId
+ * @property {import('mongoose').Types.ObjectId} userId
  * @property {string} otp
  * @property {Date} expiresAt
  * @property {number} [attempts]
@@ -62,6 +62,26 @@ const otpSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    strict: 'throw',
+    strictQuery: false,
+
+    toJSON: {
+      virtuals: true,
+      versionKey: false,
+      transform: function (_doc, ret) {
+        delete ret._id;
+        return ret;
+      },
+    },
+
+    toObject: {
+      virtuals: true,
+      versionKey: false,
+      transform: function (_doc, ret) {
+        delete ret._id;
+        return ret;
+      },
+    },
   }
 );
 

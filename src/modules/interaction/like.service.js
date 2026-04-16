@@ -88,4 +88,37 @@ const unlikePostById = async (postId, userId) => {
   }
 };
 
-export { likePostById, unlikePostById };
+/**
+ * @description Gets likers of a post with pagination.
+ * @param {string} postId
+ * @param {Object} options
+ * @param {number} options.page
+ * @param {number} options.limit
+ * @returns {Promise<{likers: any[], likesCount: number}>}
+ */
+const getPostLikersByPostId = async (postId, { page = 1, limit = 10 }) => {
+  validatePostId(postId);
+
+  const skip = (page - 1) * limit;
+
+  const likes = await Like.find({
+    likedItemId: postId,
+    onModel: 'Post',
+  })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .populate('user', 'avatar username fullName');
+
+  const likesCount = await Like.countDocuments({
+    likedItemId: postId,
+    onModel: 'Post',
+  });
+
+  return {
+    likers: likes.map(like => like.user),
+    likesCount,
+  };
+};
+
+export { likePostById, unlikePostById, getPostLikersByPostId };

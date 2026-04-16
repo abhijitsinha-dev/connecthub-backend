@@ -11,6 +11,12 @@ import ApiError from '../../utils/ApiError.js';
  */
 const createPostService = async postData => {
   const newPost = await Post.create(postData);
+
+  // Increment the post count for the user
+  await User.findByIdAndUpdate(postData.user, {
+    $inc: { postsCount: 1 },
+  });
+
   return newPost.toJSON();
 };
 

@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 /**
  * @description This file defines the Mongoose schema and model for the User collection. It includes fields for username, email, password, and verification status, along with validation rules and a pre-save hook to hash passwords. The schema also sets up a TTL index to automatically delete unverified users after 24 hours.
  * @typedef {Object} UserFields
- * @property {mongoose.Schema.Types.ObjectId} id
+ * @property {import('mongoose').Types.ObjectId} id
  * @property {string} username
  * @property {string} fullName
  * @property {string} email
@@ -20,8 +20,9 @@ import bcrypt from 'bcryptjs';
  * @property {Date=} dateOfBirth
  * @property {string=} address
  * @property {'active' | 'inactive' | 'deactivated' | 'deleted' | 'suspended'} status
- * @property {Array<mongoose.Schema.Types.ObjectId>} followers
- * @property {Array<mongoose.Schema.Types.ObjectId>} following
+ * @property {number} followersCount
+ * @property {number} followingCount
+ * @property {number} postsCount
  * @property {boolean} isDemo
  * @property {Date} createdAt
  * @property {Date} updatedAt
@@ -162,20 +163,21 @@ const userSchema = new mongoose.Schema(
       enum: ['active', 'inactive', 'deactivated', 'deleted', 'suspended'],
       default: 'inactive',
     },
-
-    followers: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
-
-    following: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
+    // Followers count
+    followersCount: {
+      type: Number,
+      default: 0,
+    },
+    // Following count
+    followingCount: {
+      type: Number,
+      default: 0,
+    },
+    // Posts count
+    postsCount: {
+      type: Number,
+      default: 0,
+    },
 
     // A flag to indicate if this user is part of demo data. This can be useful for filtering out demo users in production.
     isDemo: {
@@ -186,6 +188,8 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    // strict: 'throw',
+    // strictQuery: false,
 
     toJSON: {
       virtuals: true, // This automatically adds 'id' based on '_id'

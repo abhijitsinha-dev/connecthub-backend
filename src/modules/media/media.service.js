@@ -20,6 +20,8 @@ const generateCloudinarySignature = () => {
 };
 
 const deleteMedia = async (publicId, resourceType) => {
+  if (!publicId || publicId.trim() === '') return { result: 'not_found' };
+
   return await cloudinary.uploader.destroy(publicId, {
     resource_type: resourceType,
   });

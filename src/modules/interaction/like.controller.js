@@ -1,6 +1,10 @@
 import ApiResponse from '../../utils/ApiResponse.js';
 import asyncHandler from '../../utils/asyncHandler.js';
-import { likePostById, unlikePostById } from './like.service.js';
+import {
+  getPostLikersByPostId,
+  likePostById,
+  unlikePostById,
+} from './like.service.js';
 
 /**
  * @description Likes a post.
@@ -30,4 +34,19 @@ const unlikePost = asyncHandler(async (req, res, _next) => {
   ApiResponse.OK({}, 'Post unliked successfully').send(res);
 });
 
-export { likePost, unlikePost };
+/**
+ * @description Gets likers of a post.
+ * @type {import('express').RequestHandler}
+ * @returns {import('express').Response}
+ */
+const getPostLikers = asyncHandler(async (req, res, _next) => {
+  const { postId } = req.params;
+  const page = parseInt(String(req.query.page)) || 1;
+  const limit = parseInt(String(req.query.limit)) || 10;
+
+  const data = await getPostLikersByPostId(String(postId), { page, limit });
+
+  ApiResponse.OK(data, 'Post likers fetched successfully').send(res);
+});
+
+export { getPostLikers, likePost, unlikePost };

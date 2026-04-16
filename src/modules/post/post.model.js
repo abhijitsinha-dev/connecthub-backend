@@ -3,8 +3,8 @@ import mongoose from 'mongoose';
 /**
  * @description Mongoose schema and model for the Post collection.
  * @typedef {Object} PostFields
- * @property {mongoose.Schema.Types.ObjectId} id
- * @property {mongoose.Schema.Types.ObjectId} user
+ * @property {import('mongoose').Types.ObjectId} id
+ * @property {import('mongoose').Types.ObjectId} user
  * @property {string} caption
  * @property {Object} media
  * @property {string} media.url
@@ -72,6 +72,9 @@ const postSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    strict: 'throw',
+    strictQuery: false,
+
     toJSON: {
       virtuals: true,
       versionKey: false,

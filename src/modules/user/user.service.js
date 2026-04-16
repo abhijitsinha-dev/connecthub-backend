@@ -1,6 +1,7 @@
 import ApiError from '../../utils/ApiError.js';
 import { deleteMedia } from '../media/media.service.js';
 import User from './user.model.js';
+import Follow from '../follow/follow.model.js';
 
 /**
  * @description Input data structure for creating a new user account, including username, email, and password. This is used for type annotations and documentation purposes.
@@ -216,15 +217,31 @@ const searchUsersAtlas = async searchTerm => {
 /**
  * @description Retrieves a user's profile information based on their username. It checks if the user exists and returns the user data. If the user is not found, it throws a 404 Not Found error.
  * @param {string} username
- * @returns {Promise<import('./user.model.js').UserFields>}
+ * @param {string} [visitorId] - The ID of the user viewing the profile
+ * @returns {Promise<import('./user.model.js').UserFields & { isFollowedByCurrentUser: boolean | null }>}
  * @throws {import('../utils/ApiError.js').ApiError}
  */
-const findUserByUsername = async username => {
+const findUserByUsername = async (username, visitorId) => {
   const user = await User.findOne({ username });
   if (!user) {
     throw ApiError.NOT_FOUND('username');
   }
-  return user.toJSON();
+
+  const result = user.toJSON();
+
+  if (visitorId) {
+    if (visitorId.toString() === user._id.toString()) {
+      result.isFollowedByCurrentUser = null;
+    } else {
+      const follow = await Follow.findOne({
+        follower: visitorId,
+        following: user._id,
+      }).select('_id');
+      result.isFollowedByCurrentUser = !!follow;
+    }
+  }
+
+  return result;
 };
 
 /**
@@ -254,75 +271,6 @@ const changeUserPassword = async (userId, oldPassword, newPassword) => {
   user.password = newPassword;
   return (await user.save()).toJSON();
 };
-
-/**
- * @description Follows a target user. Adds the target user to the current user's 'following' list, and the current user to the target's 'followers' list.
- * @param {import('mongoose').Schema.Types.ObjectId | string} userId
- * @param {import('mongoose').Schema.Types.ObjectId | string} targetUserId
- * @throws {import('../utils/ApiError.js').ApiError}
- */
-const followUserById = async (userId, targetUserId) => {
-  if (userId.toString() === targetUserId.toString()) {
-    throw new ApiError(400, 'You cannot follow yourself');
-  }
-
-  const userToFollow = await User.findById(targetUserId).select('_id');
-  if (!userToFollow) {
-    throw ApiError.NOT_FOUND('targetUserId');
-  }
-
-  const currentUser = await User.findById(userId).select('following');
-  if (!currentUser) {
-    throw ApiError.NOT_FOUND('userId');
-  }
-
-  const isFollowing = currentUser.following.some(
-    id => id.toString() === targetUserId.toString()
-  );
-  if (isFollowing) {
-    throw new ApiError(400, 'You are already following this user');
-  }
-
-  await Promise.all([
-    User.findByIdAndUpdate(userId, { $addToSet: { following: targetUserId } }),
-    User.findByIdAndUpdate(targetUserId, { $addToSet: { followers: userId } }),
-  ]);
-};
-
-/**
- * @description Unfollows a target user. Removes the target user from the current user's 'following' list, and the current user from the target's 'followers' list.
- * @param {import('mongoose').Schema.Types.ObjectId | string} userId
- * @param {import('mongoose').Schema.Types.ObjectId | string} targetUserId
- * @throws {import('../utils/ApiError.js').ApiError}
- */
-const unfollowUserById = async (userId, targetUserId) => {
-  if (userId.toString() === targetUserId.toString()) {
-    throw new ApiError(400, 'You cannot unfollow yourself');
-  }
-
-  const userToUnfollow = await User.findById(targetUserId).select('_id');
-  if (!userToUnfollow) {
-    throw ApiError.NOT_FOUND('targetUserId');
-  }
-
-  const currentUser = await User.findById(userId).select('following');
-  if (!currentUser) {
-    throw ApiError.NOT_FOUND('userId');
-  }
-
-  const isFollowing = currentUser.following.some(
-    id => id.toString() === targetUserId.toString()
-  );
-  if (!isFollowing) {
-    throw new ApiError(400, 'You are not following this user');
-  }
-
-  await Promise.all([
-    User.findByIdAndUpdate(userId, { $pull: { following: targetUserId } }),
-    User.findByIdAndUpdate(targetUserId, { $pull: { followers: userId } }),
-  ]);
-};
-
 export {
   createUser,
   verifyUserEmail,
@@ -334,6 +282,4 @@ export {
   searchUsersAtlas,
   findUserByUsername,
   changeUserPassword,
-  followUserById,
-  unfollowUserById,
 };

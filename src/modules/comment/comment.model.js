@@ -60,6 +60,9 @@ const commentSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    strict: 'throw',
+    strictQuery: false,
+
     toJSON: {
       virtuals: true,
       versionKey: false,
